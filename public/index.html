@@ -243,7 +243,6 @@
                 return;
             }
 
-            // Create a temporary iframe to render the HTML
             const printFrame = document.createElement('iframe');
             printFrame.style.position = 'fixed';
             printFrame.style.right = '0';
@@ -255,33 +254,31 @@
 
             const frameDoc = printFrame.contentWindow.document;
             frameDoc.open();
-            // Inject the HTML
             frameDoc.write(html);
-            // Add some base styling if needed, but usually the raw HTML is enough
             frameDoc.write('<style>@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>');
             frameDoc.close();
 
-            // Wait for images and resources to load before printing
-            printFrame.onload = function() {
-                // Trigger the browser's native print dialog
+            let hasPrinted = false;
+
+            const triggerPrint = () => {
+                if (hasPrinted) return;
+                hasPrinted = true;
+                
                 printFrame.contentWindow.focus();
                 printFrame.contentWindow.print();
                 
-                // Cleanup after a short delay
                 setTimeout(() => {
-                    document.body.removeChild(printFrame);
+                    if (document.body.contains(printFrame)) {
+                        document.body.removeChild(printFrame);
+                    }
                     showToast('Print dialog opened successfully!');
                 }, 1000);
             };
+
+            printFrame.onload = triggerPrint;
             
-            // Fallback just in case onload doesn't fire (e.g. no external resources)
-            setTimeout(() => {
-                if(document.body.contains(printFrame)) {
-                    printFrame.contentWindow.focus();
-                    printFrame.contentWindow.print();
-                    setTimeout(() => document.body.removeChild(printFrame), 1000);
-                }
-            }, 2000);
+            // Fallback
+            setTimeout(triggerPrint, 2000);
         });
     </script>
 </body>
