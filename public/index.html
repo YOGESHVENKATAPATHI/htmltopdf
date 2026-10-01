@@ -264,15 +264,16 @@
                 if (hasPrinted) return;
                 hasPrinted = true;
                 
-                printFrame.contentWindow.focus();
-                printFrame.contentWindow.print();
-                
-                setTimeout(() => {
+                // Only clean up the iframe AFTER the print dialog is closed
+                printFrame.contentWindow.onafterprint = () => {
                     if (document.body.contains(printFrame)) {
                         document.body.removeChild(printFrame);
                     }
-                    showToast('Print dialog opened successfully!');
-                }, 1000);
+                };
+
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                showToast('Print dialog opened successfully!');
             };
 
             printFrame.onload = triggerPrint;
